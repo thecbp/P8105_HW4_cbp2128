@@ -1,5 +1,5 @@
 ---
-title: "Homework 4"
+title: "Homework 4 - Problem 2"
 output: 
   flexdashboard::flex_dashboard:
     orientation: rows
@@ -12,41 +12,57 @@ library(plotly)
 library(p8105.datasets)
 
 insta = p8105.datasets::instacart %>% 
-  mutate(order_dow = factor(order_dow))
+  mutate(order_dow = factor(order_dow, levels = c(0, 1, 2, 3, 4, 5, 6),
+                            labels = c("Sun", "Mon", "Tues", 
+                                       "Wed", "Thu", "Fri",
+                                       "Sat"), 
+                            ordered = TRUE))
 ```
 
 Row
 -----------------------------------------------------------------------
 
-### Chart 1
+### Percent of items that are reorders per aisle
 
 ```{r insta-bar }
 insta %>% 
   group_by(aisle, aisle_id) %>% 
   summarize(percent_reordered = sum(reordered) / n()) %>% 
   plot_ly(x = ~aisle_id, y = ~percent_reordered, 
-          type = "bar", text = ~aisle)
+          type = "bar", text = ~aisle, color = ~aisle,
+          hoverinfo = "text+y") %>% 
+  layout(xaxis = list(title = "Aisle ID"),
+         yaxis = list(title = "Percent of total items reordered"))
 ```
 
 Row
 -----------------------------------------------------------------------
 
-### Chart 2
+### Number of orders by hour of the day
 
-```{r insta-line }
+```{r insta-scatter }
 insta %>% 
-  group_by(order_dow) %>% 
+  group_by(order_hour_of_day) %>% 
   summarize(num_orders = n()) %>% 
-  plot_ly(x = ~order_dow, y = ~num_orders,
-          type = "scatter")
+  plot_ly(x = ~order_hour_of_day, y = ~num_orders,
+          type = "scatter", mode = "markers+lines",
+          line = list(shape = "spline",
+                      color = "red"),
+          marker = list(size = 10)) %>% 
+  layout(xaxis = list(title = "Hour of the day"),
+         yaxis = list(title = "Number of items ordered in given hour"))
 ```
 
-### Chart 3
+### Distribution of cart sizes by day of the week
 
 ```{r insta-box }
 insta %>% 
   group_by(order_id, order_dow) %>% 
   summarize(total_cart = max(add_to_cart_order)) %>% 
   plot_ly(x = ~order_dow, y = ~total_cart, 
-          type = "box", colors = "Set2")
+          type = "box", color = ~order_dow,
+          hoverinfo = "text+y") %>% 
+  layout(showlegend = FALSE,
+         xaxis = list(title = "Day of the week"),
+         yaxis = list(title = "Number of items in cart"))
 ```
